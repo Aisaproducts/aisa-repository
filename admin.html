@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - AISA Products</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        .admin-sidebar {
+            width: 250px;
+            background: var(--dark-color);
+            color: white;
+            padding: 2rem 0;
+            position: fixed;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .admin-menu {
+            list-style: none;
+        }
+
+        .admin-menu li {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .admin-menu li:hover,
+        .admin-menu li.active {
+            background: var(--primary-color);
+            border-left-color: var(--secondary-color);
+        }
+
+        .admin-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 2rem;
+            background: var(--light-color);
+        }
+
+        .admin-section {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .products-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .product-item {
+            background: var(--light-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-details {
+            flex: 1;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+            }
+
+            .admin-content {
+                margin-left: 0;
+            }
+
+            .admin-menu {
+                display: flex;
+                overflow-x: auto;
+            }
+
+            .admin-menu li {
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">AISA Products - Admin</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Back to Store</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Admin Container -->
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <div class="admin-sidebar">
+            <ul class="admin-menu">
+                <li class="active" onclick="switchSection('dashboard')">📊 Dashboard</li>
+                <li onclick="switchSection('products')">📦 Products</li>
+                <li onclick="switchSection('add-product')">➕ Add Product</li>
+                <li onclick="switchSection('contacts')">📧 Messages</li>
+            </ul>
+        </div>
+
+        <!-- Content -->
+        <div class="admin-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="admin-section active">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-products">9</div>
+                        <div class="stat-label">Total Products</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-categories">3</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="messages-count">0</div>
+                        <div class="stat-label">New Messages</div>
+                    </div>
+                </div>
+                <h3>Quick Stats</h3>
+                <p>Welcome to AISA Products Admin Panel. Use the menu on the left to manage products, view messages, and more.</p>
+            </div>
+
+            <!-- Products Section -->
+            <div id="products" class="admin-section">
+                <h2>Product Management</h2>
+                <div class="products-list" id="products-list">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Add Product Section -->
+            <div id="add-product" class="admin-section">
+                <h2>Add New Product</h2>
+                <form id="product-form">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="product-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="product-category" required>
+                            <option value="">Select Category</option>
+                            <option value="hair">Hair Care</option>
+                            <option value="beauty">Beauty</option>
+                            <option value="skincare">Skincare</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="number" id="product-price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="product-description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Emoji (or icon)</label>
+                        <input type="text" id="product-emoji" value="🧴" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Add Product</button>
+                        <button type="reset" class="btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Messages Section -->
+            <div id="contacts" class="admin-section">
+                <h2>Contact Messages</h2>
+                <div id="messages-list">
+                    <p>No messages yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit Product</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <form id="edit-product-form">
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="edit-product-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="edit-product-category" required>
+                        <option value="hair">Hair Care</option>
+                        <option value="beauty">Beauty</option>
+                        <option value="skincare">Skincare</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Price</label>
+                    <input type="number" id="edit-product-price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="edit-product-description" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const productsData = [
+            {
+                id: 1,
+                name: 'Argan Oil Hair Serum',
+                category: 'hair',
+                price: 24.99,
+                description: 'Pure argan oil for deep hair conditioning',
+                emoji: '🧴'
+            },
+            {
+                id: 2,
+                name: 'Keratin Hair Mask',
+                category: 'hair',
+                price: 19.99,
+                description: 'Intensive keratin treatment for damaged hair',
+                emoji: '💆'
+            },
+            {
+                id: 3,
+                name: 'Silky Hair Shampoo',
+                category: 'hair',
+                price: 12.99,
+                description: 'Gentle cleansing shampoo for all hair types',
+                emoji: '🧼'
+            },
+            {
+                id: 4,
+                name: 'Foundation Cream',
+                category: 'beauty',
+                price: 29.99,
+                description: 'Lightweight foundation with SPF 15',
+                emoji: '💄'
+            },
+            {
+                id: 5,
+                name: 'Lipstick Collection',
+                category: 'beauty',
+                price: 14.99,
+                description: 'Long-lasting matte lipstick in various shades',
+                emoji: '💋'
+            },
+            {
+                id: 6,
+                name: 'Eye Shadow Palette',
+                category: 'beauty',
+                price: 22.99,
+                description: '12-color eyeshadow palette with shimmer',
+                emoji: '👁️'
+            },
+            {
+                id: 7,
+                name: 'Facial Cleanser',
+                category: 'skincare',
+                price: 16.99,
+                description: 'pH-balanced cleanser for sensitive skin',
+                emoji: '🧴'
+            },
+            {
+                id: 8,
+                name: 'Moisturizer Cream',
+                category: 'skincare',
+                price: 21.99,
+                description: 'Hydrating cream with aloe vera',
+                emoji: '💅'
+            },
+            {
+                id: 9,
+                name: 'Vitamin C Serum',
+                category: 'skincare',
+                price: 26.99,
+                description: 'Brightening serum with vitamin C',
+                emoji: '✨'
+            }
+        ];
+
+        let products = [...productsData];
+        let editingId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+            setupEventListeners();
+        });
+
+        function switchSection(sectionId) {
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.admin-menu li').forEach(li => {
+                li.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function loadProducts() {
+            const productsList = document.getElementById('products-list');
+            productsList.innerHTML = '';
+
+            products.forEach(product => {
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.innerHTML = `
+                    <div class="product-details">
+                        <h3>${product.name}</h3>
+                        <p>Category: ${product.category} | Price: $${product.price.toFixed(2)}</p>
+                        <p>${product.description}</p>
+                    </div>
+                    <div class="product-actions">
+                        <button class="btn-edit" onclick="editProduct(${product.id})">Edit</button>
+                        <button class="btn-delete" onclick="deleteProduct(${product.id})">Delete</button>
+                    </div>
+                `;
+                productsList.appendChild(div);
+            });
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            editingId = id;
+
+            document.getElementById('edit-product-name').value = product.name;
+            document.getElementById('edit-product-category').value = product.category;
+            document.getElementById('edit-product-price').value = product.price;
+            document.getElementById('edit-product-description').value = product.description;
+
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+            editingId = null;
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                products = products.filter(p => p.id !== id);
+                loadProducts();
+                alert('Product deleted successfully');
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('product-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newProduct = {
+                    id: Math.max(...products.map(p => p.id), 0) + 1,
+                    name: document.getElementById('product-name').value,
+                    category: document.getElementById('product-category').value,
+                    price: parseFloat(document.getElementById('product-price').value),
+                    description: document.getElementById('product-description').value,
+                    emoji: document.getElementById('product-emoji').value
+                };
+
+                products.push(newProduct);
+                document.getElementById('product-form').reset();
+                switchSection('products');
+                loadProducts();
+                alert('Product added successfully');
+            });
+
+            document.getElementById('edit-product-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const product = products.find(p => p.id === editingId);
+                if (product) {
+                    product.name = document.getElementById('edit-product-name').value;
+                    product.category = document.getElementById('edit-product-category').value;
+                    product.price = parseFloat(document.getElementById('edit-product-price').value);
+                    product.description = document.getElementById('edit-product-description').value;
+                }
+                closeModal();
+                loadProducts();
+                alert('Product updated successfully');
+            });
+        }
+    </script>
+</body>
+</html>
